@@ -7,6 +7,9 @@ module.exports = function (app) {
 	app.route('/spin/:deviceId/:bet')
 		.get(pH.jsonp(slot.spin));
 
+	app.route('/purchase/:deviceId')
+		.post(pH.jsonp(slot.purchase));
+
 	app.route('/balance/:deviceId')
 		.get(pH.jsonp(slot.balance));
 

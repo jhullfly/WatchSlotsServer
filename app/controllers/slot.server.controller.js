@@ -5,6 +5,7 @@
  */
 var mongoose = require('mongoose'),
 	User = mongoose.model('User'),
+	Purchase = mongoose.model('Purchase'),
 	l = require('../utils/logging'),
 	_ = require('lodash');
 
@@ -101,6 +102,25 @@ exports.spin = function (req) {
 			reels:reels,
 			newBalance: user.balance
 		};
+	});
+};
+
+exports.purchase = function(req) {
+	var user = req.user;
+	var quantity = req.body.quantity;
+	user.balance += quantity;
+
+	return Purchase.create({
+		user: user,
+		quantity: quantity,
+		data: req.body
+	}).then(function() {
+		return user.savePromise().then(function(newUser) {
+			return {
+				success:true,
+				newBalance: user.balance
+			};
+		});
 	});
 };
 
