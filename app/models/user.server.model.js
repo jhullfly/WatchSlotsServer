@@ -17,6 +17,12 @@ var UserSchema = new Schema({
 	balance: {
 		type: Number,
 		default: 0
+	},
+	lastReturnBonus: {
+		type: Date
+	},
+	outcome: {
+		type: Number
 	}
 });
 

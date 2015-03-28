@@ -13,5 +13,14 @@ module.exports = function (app) {
 	app.route('/balance/:deviceId')
 		.get(pH.jsonp(slot.balance));
 
+	app.route('/admin/resetReturnBonus/:deviceId')
+		.get(pH.jsonp(slot.resetReturnBonus));
+
+	app.route('/admin/setOutcome/:deviceId/:outcome')
+		.get(pH.jsonp(slot.setOutcome));
+
+	app.route('/admin/setBalance/:deviceId/:balance')
+		.get(pH.jsonp(slot.setBalance));
+
 	app.param('deviceId', pH.param(slot.userByDeviceId, 'user'));
 };

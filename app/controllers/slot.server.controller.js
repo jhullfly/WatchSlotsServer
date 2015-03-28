@@ -79,16 +79,17 @@ var RETURN_PAYOUTS = [
 	10, 20, 10, 20, 50, 20, 10, 100
 ];
 
-function calcReturnBonus(user) {
-	var updatedAt = moment(user.updatedAt);
-	var now = moment();
+function calcReturnBonus(user, nowDate) {
+	var now = moment(nowDate);
 	// if we are in a different hour of the day or more then an hour between awards
 	// then it is time to award.
-	if (now.hour() !== updatedAt.hour() ||
-			now.diff(updatedAt, 'hours') >= 1) {
+	if (!user.lastReturnBonus ||
+		now.hour() !== moment(user.lastReturnBonus).hour() ||
+			now.diff(moment(user.lastReturnBonus), 'hours') >= 1) {
 		var position = getRandomInt(1, 8);
 		var winnings = RETURN_PAYOUTS[position-1];
 		user.balance = user.balance+winnings;
+		user.lastReturnBonus = nowDate;
 		return {
 			position: position,
 			winnings: winnings,
@@ -99,8 +100,23 @@ function calcReturnBonus(user) {
 	}
 }
 
-function nextReturnBonus() {
-	return moment().add(1, 'hour').startOf('hour').toDate();
+function nextReturnBonus(nowDate) {
+	return moment(nowDate).add(1, 'hour').startOf('hour').toDate();
+}
+
+function getOutcome(user) {
+	if (user.outcome) {
+		return SPIN_PROBS[user.outcome-1];
+	}
+	var rand = Math.random();
+	var runningProb = 0;
+	for(var i = 0 ; i < SPIN_PROBS.length; i++) {
+		runningProb += SPIN_PROBS[i].chance;
+		if (rand <= runningProb) {
+			return SPIN_PROBS[i];
+		}
+	}
+	return null;
 }
 
 exports.spin = function (req) {
@@ -109,27 +125,19 @@ exports.spin = function (req) {
 	if (bet <= 0 || bet > user.balance) {
 		return {success:false, message: 'invalid bet amount '+bet};
 	}
-	var rand = Math.random();
-	var runningProb = 0;
-	var outcome = null;
-	for(var i = 0 ; i < SPIN_PROBS.length; i++) {
-		runningProb += SPIN_PROBS[i].chance;
-		if (rand <= runningProb) {
-			outcome = SPIN_PROBS[i];
-			break;
-		}
-	}
+	var outcome = getOutcome(user);
 	var winnings = outcome.payout*bet;
 	var reels = outcome.reels();
 	user.balance = user.balance - bet + winnings;
+	var nowDate = new Date();
 	var returnData = {
 		success:true,
 		winnings:winnings,
 		reels:reels,
 		newBalance: user.balance,
-		nextBonus: nextReturnBonus()
+		nextBonus: nextReturnBonus(nowDate)
 	};
-	var returnBonus = calcReturnBonus(user);
+	var returnBonus = calcReturnBonus(user, nowDate);
 	if (returnBonus) {
 		returnData.returnBonus = returnBonus;
 	}
@@ -155,6 +163,25 @@ exports.purchase = function(req) {
 			};
 		});
 	});
+};
+
+exports.resetReturnBonus = function(req) {
+	req.user.lastReturnBonus = moment().subtract(1, 'days').toDate();
+	return req.user.savePromise();
+};
+
+exports.setOutcome = function(req) {
+	if (req.param('outcome') === 'clear') {
+		req.user.outcome = undefined;
+	} else {
+		req.user.outcome = req.param('outcome');
+	}
+	return req.user.savePromise();
+};
+
+exports.setBalance = function(req) {
+	req.user.balance = req.param('balance');
+	return req.user.savePromise();
 };
 
 exports.userByDeviceId = function(req, deviceId) {

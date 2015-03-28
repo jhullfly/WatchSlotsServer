@@ -48,8 +48,30 @@ returns:
        newBalance:<value>
     }
 
+## Admin functions
+
+TODO: some way to restrict these.
+
+###resetReturnBonus
+Sets the users last return bonus to 1 day ago. So next spin will trigger a return bonus.
+
+    http://watchslots.herokuapp.com/resetReturnBonus/<identifierForVendor>
+
+###setOutcome
+Sets the users outcome on the slot machine until it is cleared.
+
+    http://watchslots.herokuapp.com/setOutcome/<identifierForVendor>/<outcome>
+
+outcome - should be 1-8 or clear to return to random behavior
+
+###setBalance
+Sets the users balance
+
+    http://watchslots.herokuapp.com/setBalance/<identifierForVendor>/<balance>
+
+
 ##Todo
 
-* add daily return bonus
+* add daily return bonus: for get balance
 * add support for facebook integration
 
