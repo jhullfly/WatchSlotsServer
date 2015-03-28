@@ -13,6 +13,9 @@ module.exports = function (app) {
 	app.route('/balance/:deviceId')
 		.get(pH.jsonp(slot.balance));
 
+	app.route('/balanceWithRBAward/:deviceId')
+		.get(pH.jsonp(slot.balanceWithRBAward));
+
 	app.route('/admin/resetReturnBonus/:deviceId')
 		.get(pH.jsonp(slot.resetReturnBonus));
 

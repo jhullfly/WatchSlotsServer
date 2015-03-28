@@ -10,10 +10,6 @@ var mongoose = require('mongoose'),
 	_ = require('lodash'),
 	moment = require('moment');
 
-exports.balance = function (req) {
-	return {success:true, balance: req.user.balance};
-};
-
 function getRandomInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -79,13 +75,17 @@ var RETURN_PAYOUTS = [
 	10, 20, 10, 20, 50, 20, 10, 100
 ];
 
-function calcReturnBonus(user, nowDate) {
-	var now = moment(nowDate);
+function isTimeToAwardReturnBonus(user, nowDate) {
 	// if we are in a different hour of the day or more then an hour between awards
 	// then it is time to award.
-	if (!user.lastReturnBonus ||
+	var now = moment(nowDate);
+	return !user.lastReturnBonus ||
 		now.hour() !== moment(user.lastReturnBonus).hour() ||
-			now.diff(moment(user.lastReturnBonus), 'hours') >= 1) {
+		now.diff(moment(user.lastReturnBonus), 'hours') >= 1;
+}
+
+function calcReturnBonus(user, nowDate) {
+	if (isTimeToAwardReturnBonus(user, nowDate)) {
 		var position = getRandomInt(1, 8);
 		var winnings = RETURN_PAYOUTS[position-1];
 		user.balance = user.balance+winnings;
@@ -118,6 +118,38 @@ function getOutcome(user) {
 	}
 	return null;
 }
+
+exports.balance = function (req) {
+	var nowDate = new Date();
+	var returnData = {
+		success: true,
+		balance: req.user.balance,
+		bonusWaiting: isTimeToAwardReturnBonus(req.user, nowDate)
+	};
+	if (!returnData.bonusWaiting) {
+		returnData.nextBonus = nextReturnBonus(nowDate);
+	}
+	return returnData;
+};
+
+exports.balanceWithRBAward = function (req) {
+	var nowDate = new Date();
+	var user = req.user;
+	var returnData = {
+		success:true,
+		balance: user.balance,
+		nextBonus: nextReturnBonus(nowDate)
+	};
+	var returnBonus = calcReturnBonus(user, nowDate);
+	if (returnBonus) {
+		returnData.returnBonus = returnBonus;
+		return user.savePromise().then(function (user) {
+			return returnData;
+		});
+	} else {
+		return returnData;
+	}
+};
 
 exports.spin = function (req) {
 	var user = req.user;

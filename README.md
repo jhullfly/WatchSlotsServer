@@ -1,7 +1,7 @@
 #Server for watch slots
 
 ##Balance
-Gets the balance.
+Gets the balance and indicates if a return bonus is available but does not award it.
 
     http://watchslots.herokuapp.com/balance/<identifierForVendor>
 returns
@@ -9,7 +9,31 @@ returns
     {
        success:true,
        balance:<value>,
+       bonusWaiting:<true|false>
+       nextBonus:<date>,
     }
+
+nextBonus is only there when bonusWaiting is false.
+
+##balanceWithRBAward
+Gets the balance and awards return bonus if it is time.
+
+    http://watchslots.herokuapp.com/balanceWithRBAward/<identifierForVendor>
+returns
+
+    {
+       success:true,
+       balance:<value>,
+       nextBonus:<date>,
+       returnBonus : {
+        wheelPosition: <value:1-8>,
+        winnings: <value>
+        afterBonusBalance: <value>
+       }
+    }
+
+the return bonus section is optional and only occurs if the bonus was awarded.
+
 
 ##Spin
 Spins and returns reel positions and new balance.
@@ -22,6 +46,7 @@ returns
        newBalance:<value>,
        reels:[<reel1>,<reel2>,<reel3>],
        winnings:<amount>,
+       nextBonus:<date>,
        returnBonus : {
         wheelPosition: <value:1-8>,
         winnings: <value>
