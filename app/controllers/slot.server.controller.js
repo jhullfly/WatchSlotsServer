@@ -7,7 +7,8 @@ var mongoose = require('mongoose'),
 	User = mongoose.model('User'),
 	Purchase = mongoose.model('Purchase'),
 	l = require('../utils/logging'),
-	_ = require('lodash');
+	_ = require('lodash'),
+	moment = require('moment');
 
 exports.balance = function (req) {
 	return {success:true, balance: req.user.balance};
@@ -74,7 +75,33 @@ var SPIN_PROBS =
 		{chance: 0.8226285, reels:lose, payout: 0}
 	];
 
+var RETURN_PAYOUTS = [
+	10, 20, 10, 20, 50, 20, 10, 100
+];
 
+function calcReturnBonus(user) {
+	var updatedAt = moment(user.updatedAt);
+	var now = moment();
+	// if we are in a different hour of the day or more then an hour between awards
+	// then it is time to award.
+	if (now.hour() !== updatedAt.hour() ||
+			now.diff(updatedAt, 'hours') >= 1) {
+		var position = getRandomInt(1, 8);
+		var winnings = RETURN_PAYOUTS[position-1];
+		user.balance = user.balance+winnings;
+		return {
+			position: position,
+			winnings: winnings,
+			afterBonusBalance: user.balance
+		};
+	} else {
+		return null;
+	}
+}
+
+function nextReturnBonus() {
+	return moment().add(1, 'hour').startOf('hour').toDate();
+}
 
 exports.spin = function (req) {
 	var user = req.user;
@@ -95,13 +122,19 @@ exports.spin = function (req) {
 	var winnings = outcome.payout*bet;
 	var reels = outcome.reels();
 	user.balance = user.balance - bet + winnings;
+	var returnData = {
+		success:true,
+		winnings:winnings,
+		reels:reels,
+		newBalance: user.balance,
+		nextBonus: nextReturnBonus()
+	};
+	var returnBonus = calcReturnBonus(user);
+	if (returnBonus) {
+		returnData.returnBonus = returnBonus;
+	}
 	return user.savePromise().then(function (user) {
-		return {
-			success:true,
-			winnings:winnings,
-			reels:reels,
-			newBalance: user.balance
-		};
+		return returnData;
 	});
 };
 

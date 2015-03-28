@@ -8,7 +8,7 @@ returns
 
     {
        success:true,
-       balance:<value>
+       balance:<value>,
     }
 
 ##Spin
@@ -21,8 +21,15 @@ returns
        success:true,
        newBalance:<value>,
        reels:[<reel1>,<reel2>,<reel3>],
-       winnings:<amount>
+       winnings:<amount>,
+       returnBonus : {
+        wheelPosition: <value:1-8>,
+        winnings: <value>
+        afterBonusBalance: <value>
+       }
     }
+
+the return bonus section is optional and only occurs if the bonus was awarded.
 
 [Here is the mapping from symbols numbers to icons](https://docs.google.com/spreadsheets/d/1EIwJ8qcnRFuYcc4vK6XQ0hKZy5CotDUIP71k2GfzZNE/edit#gid=0)
 
