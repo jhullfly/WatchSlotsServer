@@ -18,6 +18,10 @@ var PurchaseSchema = new Schema({
 		type: Number,
 		required: true
 	},
+	productId: {
+		type: String,
+		required: true
+	},
 	data: {
 		type: Schema.Types.Mixed
 	}

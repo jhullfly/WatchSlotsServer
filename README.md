@@ -62,9 +62,14 @@ the return bonus section is optional and only occurs if the bonus was awarded.
 Increases users token balance due to a purchase. Will eventually verify receipt with apple.
 
     curl -X POST \
-       -H "Content-Type: application/json" \
-       -d '{"quantity":100,"transactionId":"foo", receipt:"<base64encodedString>"}' \
-       http://watchslots.herokuapp.com/purchase/<identifierForVendor>
+           -H "Content-Type: application/json" \
+           -d '{"transactionId":"foo", receipt:"<base64encodedString>","productId":"<productId>"}' \
+           http://watchslots.herokuapp.com/purchase/<identifierForVendor>
+
+    curl -X POST \
+          -H "Content-Type: application/json" \
+          -d '{"transactionId":"foo", "receipt":"base64encodedString","productId":"WatchSlotsTokenPurchase99"}' \
+          http://10.0.1.100:3000/purchase/foo
 
 returns:
 

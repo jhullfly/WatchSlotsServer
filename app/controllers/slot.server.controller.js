@@ -178,14 +178,29 @@ exports.spin = function (req) {
 	});
 };
 
+var PRODUCTS = {
+	'WatchSlotsTokenPurchase99':110,
+	'WatchSlotsTokenPurchase499':600,
+	'WatchSlotsTokenPurchase999':1500,
+	'WatchSlotsTokenPurchase1999':3500,
+	'WatchSlotsTokenPurchase4999':10000,
+	'WatchSlotsTokenPurchase9999':25000
+};
+
 exports.purchase = function(req) {
+	var productId = req.body.productId;
+	var quantity = PRODUCTS[productId];
+	if (!quantity) {
+		return {success:false, message:'invalid productId '+productId};
+	}
+
 	var user = req.user;
-	var quantity = req.body.quantity;
 	user.balance += quantity;
 
 	return Purchase.create({
 		user: user,
 		quantity: quantity,
+		productId: productId,
 		data: req.body
 	}).then(function() {
 		return user.savePromise().then(function(newUser) {
