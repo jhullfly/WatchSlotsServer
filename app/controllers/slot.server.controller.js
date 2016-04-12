@@ -239,7 +239,7 @@ exports.userByDeviceId = function(req, deviceId) {
 			}
 			return User.create({
 				identifierForVendor: deviceId,
-				balance: 1000
+				balance: 50
 			});
 		}
 	);
